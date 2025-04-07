@@ -6,7 +6,7 @@
 /*   By: lebroue <lebroue@student.42lyon.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/11 15:43:36 by lebroue           #+#    #+#             */
-/*   Updated: 2025/03/26 20:18:57 by lebroue          ###   ########lyon.fr   */
+/*   Updated: 2025/04/08 01:27:51 by lebroue          ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -19,16 +19,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-
-
-
-// void	dup_fd()
-
-// void	close_fd(int fd)
-// {
-// 	if (close(fd) == -1)
-// 		exit_error();
-// }
 
 void	ft_free_tab_str(char **str)
 {
@@ -56,45 +46,29 @@ char	*envp_search(char **envp)
 	return (NULL);
 }
 
-char	*get_path(char **envp, char *argv_cmd, int *ret)
-{
-	char	*path;
-	char	**paths;
-	char	*buffer;
-	int		i;
-	char	*new_path;
+////// GET_PATH FUNCTION + UTILS //////
 
-	i = 0;
-	if (!argv_cmd || !envp && access(cmd) == -1)
-	
-	if (!envp || !argv_cmd)
-	{
-		*ret = 127;
-		return (NULL);
-	}
-	if (argv_cmd[0] == '/')
-	{
-		if (access(argv_cmd, F_OK | X_OK) == 0)
-			return (argv_cmd);
-		else
-		{
-			*ret = 127;
-			return (NULL);
-		}
-	}
-	path = envp_search(envp);
+int	path_check(char *path, int *ret)
+{
 	if (path == NULL)
 	{
 		*ret = 127;
-		return (NULL);
+		return (1);
 	}
-	paths = ft_split(path, ':');
+	return (0);
+}
+
+char	*get_path_in_paths(char **paths, int *ret, char *buffer, char *argv_cmd)
+{
+	char	*new_path;
+	int		i;
+
+	i = 0;
 	while (paths[i])
 	{
 		buffer = ft_strjoin(paths[i], "/");
 		new_path = ft_strjoin(buffer, argv_cmd);
 		free(buffer);
-		dprintf(1, "%s\n", new_path);
 		if (access(new_path, F_OK | X_OK) == 0)
 		{
 			ft_free_tab_str(paths);
@@ -107,20 +81,45 @@ char	*get_path(char **envp, char *argv_cmd, int *ret)
 	*ret = 127;
 	return (NULL);
 }
-void	parent_process_error_and_close_fd_exit(int *fd, int out)
+char	*get_path(char **envp, char *argv_cmd, int *ret)
+{
+	char	*path;
+	char	**paths;
+	char	*buffer;
+	int		i;
+
+	buffer = NULL;
+	i = 0;
+	if (!argv_cmd)
+	{
+		*ret = 1;
+		return (NULL);
+	}
+	else
+	{
+		if (access(argv_cmd, F_OK | X_OK) == 0)
+			return (argv_cmd);
+	}
+	path = envp_search(envp);
+	if (path_check(path, ret) == 1)
+		return (NULL);
+	paths = ft_split(path, ':');
+	return (get_path_in_paths(paths, ret, buffer, argv_cmd));
+}
+////////////////////////////////////////////////////////////////
+
+void	parent_process_open_and_dup2_error(int *fd, int out)
 {
 	if (out == -1)
 	{
 		close(fd[0]);
-		close(fd[1]);
 		close(out);
 		perror("open");
-		exit(errno);
+		exit(1);
 	}
 	if (dup2(fd[0], STDIN_FILENO) == -1)
 	{
 		close(fd[0]);
-		close(fd[1]);
 		close(out);
 		perror("dup failed");
 		exit(errno);
@@ -128,7 +127,6 @@ void	parent_process_error_and_close_fd_exit(int *fd, int out)
 	if (dup2(out, STDOUT_FILENO) == -1)
 	{
 		close(fd[0]);
-		close(fd[1]);
 		close(out);
 		perror("dup failed");
 		exit(errno);
@@ -136,20 +134,20 @@ void	parent_process_error_and_close_fd_exit(int *fd, int out)
 }
 void	execve_free_error_exit(char *path, char **buffer)
 {
+	perror("execve failed");
 	free(path);
 	ft_free_tab_str(buffer);
-	perror("execve failed");
 	exit(errno);
 }
 
 void	path_error_free_and_exit(int ret, char **buffer)
 {
-	ft_free_tab_str(buffer);
 	perror("Path not found");
+	ft_free_tab_str(buffer);
 	exit(ret);
 }
 
-void	exec_parent_process(char **envp, char **argv, int *fd)
+pid_t	exec_parent_process(char **envp, char **argv, int *fd)
 {
 	int		out;
 	char	*path;
@@ -162,8 +160,8 @@ void	exec_parent_process(char **envp, char **argv, int *fd)
 	if (pid == 0)
 	{
 		close(fd[1]);
-		out = open(argv[4], O_CREAT | O_RDWR | O_TRUNC, 0644);
-		parent_process_error_and_close_fd_exit(fd, out);
+		out = open(argv[4], O_TRUNC | O_CREAT | O_RDWR, 0644);
+		parent_process_open_and_dup2_error(fd, out);
 		close(out);
 		close(fd[0]);
 		buffer = ft_split(argv[3], ' ');
@@ -175,22 +173,20 @@ void	exec_parent_process(char **envp, char **argv, int *fd)
 		execve(path, buffer, envp);
 		execve_free_error_exit(path, buffer);
 	}
+	return (pid);
 }
 
-void	child_process_error_and_close_fd_exit(int *fd, int in) // Child process
+void	child_process_close_and_dup2_error(int *fd, int in)
 {
 	if (in == -1)
 	{
-		close(fd[0]);
-		close(fd[1]);
-		close(in);
 		perror("open");
+		close(fd[1]);
 		exit(errno);
 	}
 	if (dup2(in, STDIN_FILENO) == -1)
 	{
 		perror("dup failed");
-		close(fd[0]);
 		close(fd[1]);
 		close(in);
 		exit(errno);
@@ -198,12 +194,12 @@ void	child_process_error_and_close_fd_exit(int *fd, int in) // Child process
 	if (dup2(fd[1], STDOUT_FILENO) == -1)
 	{
 		perror("dup failed");
-		close(fd[0]);
 		close(fd[1]);
 		close(in);
 		exit(errno);
 	}
 }
+
 void	exec_child_process(char **envp, char **argv, int *fd)
 {
 	int		in;
@@ -213,8 +209,13 @@ void	exec_child_process(char **envp, char **argv, int *fd)
 
 	ret = 0;
 	close(fd[0]);
+	if (access(argv[1], R_OK | F_OK) == -1)
+	{
+		perror("test");
+		exit(1);
+	}
 	in = open(argv[1], O_RDONLY);
-	child_process_error_and_close_fd_exit(fd, in);
+	child_process_close_and_dup2_error(fd, in);
 	close(in);
 	close(fd[1]);
 	buffer = ft_split(argv[2], ' ');
@@ -222,21 +223,16 @@ void	exec_child_process(char **envp, char **argv, int *fd)
 		exit(EXIT_FAILURE);
 	path = get_path(envp, buffer[0], &ret);
 	if (path == NULL)
-	{
-		perror("Path not found");
-		ft_free_tab_str(buffer);
-		exit(ret);
-	}
+		path_error_free_and_exit(ret, buffer);
 	execve(path, buffer, envp);
 	execve_free_error_exit(path, buffer);
 }
-int	argc_error_and_close_fd_exit(int *fd) /// main process
+int	argc_error_and_close_fd_exit(void) /// main process
 {
-	close(fd[0]);
-	close(fd[1]);
 	write(2, "ERROR\n", 6);
-	return (-1);
+	exit(1);
 }
+
 int	pipe_process_error_and_close_fd_exit(int *fd) // main process
 {
 	close(fd[0]);
@@ -244,6 +240,7 @@ int	pipe_process_error_and_close_fd_exit(int *fd) // main process
 	perror("pipe failed");
 	exit(errno);
 }
+
 int	fork_process_error_and_close_fd_exit(int *fd) // main process
 {
 	close(fd[0]);
@@ -252,20 +249,30 @@ int	fork_process_error_and_close_fd_exit(int *fd) // main process
 	exit(errno);
 }
 
+int	waiting(pid_t pid, int status)
+{
+	int		ret;
+	pid_t	pid_at_exit;
+
+	while (1)
+	{
+		pid_at_exit = wait(&status);
+		if (pid_at_exit == pid)
+			ret = WEXITSTATUS(status);
+		if (pid_at_exit < 0)
+			break ;
+	}
+	return (ret);
+}
+
 int	main(int ac, char **av, char **envp)
 {
-	int	pid;
-	int	fd[2];
-	int	status;
-	int	ret1;
-	int	ret2;
+	pid_t	pid;
+	int		ret;
 
-	// if ()
-	// if (!envp)
-	//     verif_cmd()
+	int fd[2]; // (fd[0] && fd[1])
 	if (ac != 5)
-		argc_error_and_close_fd_exit(fd);
-	status = 0;
+		argc_error_and_close_fd_exit();
 	if (pipe(fd) == -1)
 		pipe_process_error_and_close_fd_exit(fd);
 	pid = fork();
@@ -274,12 +281,9 @@ int	main(int ac, char **av, char **envp)
 	if (pid == 0)
 		exec_child_process(envp, av, fd);
 	else
-		exec_parent_process(envp, av, fd);
+		pid = exec_parent_process(envp, av, fd);
 	close(fd[0]);
 	close(fd[1]);
-	wait(&status);
-	ret1 = WEXITSTATUS(status);
-	wait(&status);
-	ret2 = WEXITSTATUS(status);
-	return (ret1);
+	ret = waiting(pid, 0);
+	return (ret);
 }
