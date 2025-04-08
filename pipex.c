@@ -6,7 +6,7 @@
 /*   By: lebroue <lebroue@student.42lyon.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/11 15:43:36 by lebroue           #+#    #+#             */
-/*   Updated: 2025/04/08 01:27:51 by lebroue          ###   ########lyon.fr   */
+/*   Updated: 2025/04/08 22:02:51 by lebroue          ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -33,6 +33,9 @@ void	ft_free_tab_str(char **str)
 	free(str);
 }
 
+
+//////////////////// GET_PATH - UTILS //////////////////////
+
 char	*envp_search(char **envp)
 {
 	if (!envp || !*envp)
@@ -45,8 +48,6 @@ char	*envp_search(char **envp)
 	}
 	return (NULL);
 }
-
-////// GET_PATH FUNCTION + UTILS //////
 
 int	path_check(char *path, int *ret)
 {
@@ -64,12 +65,14 @@ char	*get_path_in_paths(char **paths, int *ret, char *buffer, char *argv_cmd)
 	int		i;
 
 	i = 0;
+	if (paths == NULL)
+		return (NULL);
 	while (paths[i])
 	{
-		buffer = ft_strjoin(paths[i], "/");
+		buffer = ft_strjoin(paths[i], "/"); // securiser S1 = NULL return(NULL)
 		new_path = ft_strjoin(buffer, argv_cmd);
 		free(buffer);
-		if (access(new_path, F_OK | X_OK) == 0)
+		if (new_path != NULL && access(new_path, F_OK | X_OK) == 0)
 		{
 			ft_free_tab_str(paths);
 			return (new_path);
@@ -81,6 +84,7 @@ char	*get_path_in_paths(char **paths, int *ret, char *buffer, char *argv_cmd)
 	*ret = 127;
 	return (NULL);
 }
+
 char	*get_path(char **envp, char *argv_cmd, int *ret)
 {
 	char	*path;
@@ -108,12 +112,13 @@ char	*get_path(char **envp, char *argv_cmd, int *ret)
 }
 ////////////////////////////////////////////////////////////////
 
+//////////// PARENT PROCESS - UTILS /////////////////////////////
+
 void	parent_process_open_and_dup2_error(int *fd, int out)
 {
 	if (out == -1)
 	{
 		close(fd[0]);
-		close(out);
 		perror("open");
 		exit(1);
 	}
@@ -156,7 +161,7 @@ pid_t	exec_parent_process(char **envp, char **argv, int *fd)
 	int		ret;
 
 	ret = 0;
-	pid = fork();
+	pid = fork(); ////securiser le fork
 	if (pid == 0)
 	{
 		close(fd[1]);
@@ -176,12 +181,18 @@ pid_t	exec_parent_process(char **envp, char **argv, int *fd)
 	return (pid);
 }
 
+//////////////////////////////////////////////////////////////
+
+//////////// CHILD - PROCESS - UTILS /////////////////////////////
+
+
 void	child_process_close_and_dup2_error(int *fd, int in)
 {
 	if (in == -1)
 	{
 		perror("open");
 		close(fd[1]);
+		close(in);
 		exit(errno);
 	}
 	if (dup2(in, STDIN_FILENO) == -1)
@@ -212,6 +223,7 @@ void	exec_child_process(char **envp, char **argv, int *fd)
 	if (access(argv[1], R_OK | F_OK) == -1)
 	{
 		perror("test");
+		close(fd[1]);
 		exit(1);
 	}
 	in = open(argv[1], O_RDONLY);
@@ -227,6 +239,11 @@ void	exec_child_process(char **envp, char **argv, int *fd)
 	execve(path, buffer, envp);
 	execve_free_error_exit(path, buffer);
 }
+
+//////////////////////////////////////////////////////////////////////
+
+///////////////// Main - utils ////////////////////////////////////////
+
 int	argc_error_and_close_fd_exit(void) /// main process
 {
 	write(2, "ERROR\n", 6);

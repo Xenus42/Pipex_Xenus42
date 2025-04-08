@@ -6,7 +6,7 @@
 /*   By: lebroue <lebroue@student.42lyon.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/25 10:34:44 by lebroue           #+#    #+#             */
-/*   Updated: 2024/11/28 12:27:54 by lebroue          ###   ########lyon.fr   */
+/*   Updated: 2025/04/08 21:46:32 by lebroue          ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,7 +23,7 @@ char	*ft_strjoin(char const *s1, char const *s2)
 	j = 0;
 	len = ft_strlen(s1) + ft_strlen(s2);
 	dest = malloc(sizeof(char) * len + 1);
-	if (!dest)
+	if (!dest || !s1)
 		return (NULL);
 	while (s1[i] != '\0')
 	{
