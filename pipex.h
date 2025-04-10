@@ -6,48 +6,121 @@
 /*   By: lebroue <lebroue@student.42lyon.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/24 19:01:08 by lebroue           #+#    #+#             */
-/*   Updated: 2025/04/08 01:32:07 by lebroue          ###   ########lyon.fr   */
+/*   Updated: 2025/04/11 00:38:05 by lebroue          ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
-
-
-
 
 #ifndef PIPEX_H
 # define PIPEX_H
 
-# define ERR_MALLOC 12
+# include "./00-Libft/libft.h"
+# include <errno.h>
+# include <fcntl.h>
+# include <stdio.h>
+# include <stdlib.h>
+# include <sys/types.h>
+# include <sys/wait.h>
+# include <unistd.h>
 
-#endif
+///////////////////GET-PATH UTILS /////////////////////////
+
+
+/*FREE TAB*/
 
 void	ft_free_tab_str(char **str);
 
+/*ENVP-SEARCH*/
+
 char	*envp_search(char **envp);
 
-int	path_check(char *path, int *ret);
+/*PATH-CHECK*/
 
-char	*get_path_in_paths(char **paths, int *ret, char *buffer, char *argv_cmd);
+int		path_check(char *path, int *ret);
+
+/*STRJOIN-CHECK*/
+
+char	*strjoin_check_error(char *str);
+
+
+///////////////////////// GET-PATH //////////////////////////
+
+
+/*GET PATH FUNCTION*/
 
 char	*get_path(char **envp, char *argv_cmd, int *ret);
 
-void	parent_process_open_and_dup2_error(int *fd, int out);
+/*GET PATH FUNCTION IN PATHS LIST(SUITE)*/
+
+char	*get_path_in_paths_list(char **paths, int *ret, char *buffer,
+			char *argv_cmd);
+
+
+///////////////// 2ND-CHILD PROCESS UTILS  //////////////////////////
+
+
+/*EXECVE PROTECTION*/
 
 void	execve_free_error_exit(char *path, char **buffer);
 
-void path_error_free_and_exit(int ret, char **buffer);
+/*PATH PROTECTION*/
 
-pid_t	exec_parent_process(char **envp, char **argv, int *fd);
+void	path_error_free_and_exit(int ret, char **buffer);
 
-void	child_process_close_and_dup2_error(int *fd, int in);
+/*SPLIT PROTECTION*/
 
-void	exec_child_process(char **envp, char **argv, int *fd);
+void	split_check_error(char **buffer);
 
-int	argc_error_and_close_fd_exit(void);
+/*GET-PATH PROTECTION*/
 
-int	pipe_process_error_and_close_fd_exit(int *fd);
+void	get_path_check_error(char *path, int ret, char **buffer);
 
-int	fork_process_error_and_close_fd_exit(int *fd);
 
-int	waiting(pid_t pid, int status);
+//////////////////////// 2ND-CHILD PROCESS //////////////////////////
 
-int	main(int ac, char **av, char **envp);
+
+/*EXEC 2ND CHILD*/
+
+pid_t	exec_2nd_child_process(char **envp, char **argv, int *fd);
+
+/*CLOSE & DUP2 PROTECTTION*/
+
+void	check_2nd_child_process_open_and_dup2_error(int *fd, int out);
+
+
+//////////////////////// 1ST-CHILD PROCESS //////////////////////////
+
+
+/*EXEC 1ST CHILD*/
+
+void	exec_1st_child_process(char **envp, char **argv, int *fd);
+
+/*CLOSE & DUP2 PROTECTTION*/
+
+void	check_1st_child_process_close_and_dup2_error(int *fd, int in);
+
+
+////////////////////////// MAIN - UTILS  ////////////////////////////
+
+
+/*ARGC PROTECTION*/
+
+int		argc_error_and_close_fd_exit(void);
+
+/*PIPE PROTECTION*/
+
+int		pipe_process_error_and_close_fd_exit(int *fd);
+
+/*FORK PROTECTION*/
+
+int		fork_process_error_and_close_fd_exit(int *fd);
+
+/*WAITING PID STATUS*/
+
+int		waiting(pid_t pid, int status);
+
+
+////////////////////////////// MAIN  ////////////////////////////////
+
+int		main(int argc, char **argv, char **envp);
+
+#endif

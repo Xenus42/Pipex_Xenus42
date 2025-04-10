@@ -6,7 +6,7 @@
 /*   By: lebroue <lebroue@student.42lyon.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/11/22 17:53:27 by lebroue           #+#    #+#             */
-/*   Updated: 2024/11/28 12:28:11 by lebroue          ###   ########lyon.fr   */
+/*   Updated: 2025/04/10 00:01:00 by lebroue          ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,7 @@ char	*ft_substr(char const *s, unsigned int start, size_t len)
 		len = 0;
 	if (len > ft_strlen(s) - start)
 		len = ft_strlen(s) - start;
-	dest = malloc(sizeof(char) * len + 1);
+	dest = malloc(sizeof(char) * (len + 1));
 	if (!dest)
 		return (NULL);
 	while (s[i] != '\0' && i < len)
