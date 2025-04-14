@@ -6,7 +6,7 @@
 /*   By: lebroue <lebroue@student.42lyon.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 16:16:35 by lebroue           #+#    #+#             */
-/*   Updated: 2025/04/10 23:14:19 by lebroue          ###   ########lyon.fr   */
+/*   Updated: 2025/04/14 14:04:10 by lebroue          ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ void	check_2nd_child_process_open_and_dup2_error(int *fd, int out)
 	if (out == -1)
 	{
 		close(fd[0]);
-		perror("open");
+		perror("Outfile");
 		exit(1);
 	}
 	if (dup2(fd[0], STDIN_FILENO) == -1)

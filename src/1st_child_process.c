@@ -6,13 +6,13 @@
 /*   By: lebroue <lebroue@student.42lyon.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 16:12:59 by lebroue           #+#    #+#             */
-/*   Updated: 2025/04/11 00:40:51 by lebroue          ###   ########lyon.fr   */
+/*   Updated: 2025/04/14 14:57:43 by lebroue          ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "pipex.h"
 
-void	check_1st_child_process_close_and_dup2_error(int *fd, int in)
+void	check_1st_child_process_open_and_dup2_error(int *fd, int in)
 {
 	if (in == -1)
 	{
@@ -48,17 +48,17 @@ void	exec_1st_child_process(char **envp, char **argv, int *fd)
 	close(fd[0]);
 	if (access(argv[1], R_OK | F_OK) == -1)
 	{
-		perror("test");
+		perror("ERROR");
 		close(fd[1]);
 		exit(1);
 	}
 	in = open(argv[1], O_RDONLY);
-	check_1st_child_process_close_and_dup2_error(fd, in);
+	check_1st_child_process_open_and_dup2_error(fd, in);
 	close(in);
 	close(fd[1]);
 	buffer = ft_split(argv[2], ' ');
 	if (!buffer)
-		exit(EXIT_FAILURE);
+		exit(1);
 	path = get_path(envp, buffer[0], &ret);
 	if (path == NULL)
 		path_error_free_and_exit(ret, buffer);

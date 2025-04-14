@@ -6,7 +6,7 @@
 /*   By: lebroue <lebroue@student.42lyon.fr>        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/04/10 02:22:33 by lebroue           #+#    #+#             */
-/*   Updated: 2025/04/11 00:40:21 by lebroue          ###   ########lyon.fr   */
+/*   Updated: 2025/04/14 14:01:17 by lebroue          ###   ########lyon.fr   */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,7 +15,7 @@
 int	argc_error_and_close_fd_exit(void)
 {
 	write(2, "ERROR\n", 6);
-	exit(1);
+	exit(errno);
 }
 
 int	pipe_process_error_and_close_fd_exit(int *fd)
