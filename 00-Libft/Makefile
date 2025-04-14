@@ -1,0 +1,73 @@
+NAME 		= 	libft.a
+
+CC 			=	cc
+
+CFLAGS 		= 	-Wall -Wextra -Werror -I.
+
+CPPFLAGS	=	-MD -MP
+
+RM			=	rm -f
+
+
+SRCS 		= 	ft_atoi.c\
+				ft_bzero.c\
+				ft_calloc.c\
+				ft_isalnum.c\
+				ft_isalpha.c\
+				ft_isascii.c\
+				ft_isdigit.c\
+				ft_isprint.c\
+				ft_itoa.c\
+				ft_memchr.c\
+				ft_memcmp.c\
+				ft_memcpy.c\
+				ft_memmove.c\
+				ft_memset.c\
+				ft_putchar_fd.c\
+				ft_putendl_fd.c\
+				ft_putnbr_fd.c\
+				ft_putstr_fd.c\
+				ft_split.c\
+				ft_strchr.c\
+				ft_strdup.c\
+				ft_striteri.c\
+				ft_strjoin.c\
+				ft_strlcat.c\
+				ft_strlcpy.c\
+				ft_strlen.c\
+				ft_strmapi.c\
+				ft_strncmp.c\
+				ft_strnstr.c\
+				ft_strrchr.c\
+				ft_strtrim.c\
+				ft_substr.c\
+				ft_tolower.c\
+				ft_toupper.c
+
+DEPS		= 	$(SRCS:.c=.d)
+
+OBJS		=	${SRCS:.c=.o}
+
+MAKEFLAGS 	= 	--no-print-directory
+
+
+all:
+	@$(MAKE) $(NAME)
+
+$(NAME): $(OBJS)
+	ar rcs $(NAME) $(OBJS)
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(CPPFLAGS) -c $< -o $@
+
+clean:
+	$(RM) $(OBJS) $(DEPS)
+
+fclean:	clean
+	$(RM) $(NAME)
+
+re:	fclean $(NAME)
+
+-include $(DEPS)
+
+.PHONY : all clean fclean re
